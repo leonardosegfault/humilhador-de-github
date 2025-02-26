@@ -34,7 +34,7 @@ export default function UserInput({ isLoading }: { isLoading?: boolean }) {
           maxLength={39}
           onChange={handleInput}
           pattern="^(?!-)[A-Za-z0-9\-]+(?!-)$"
-          className="w-full h-full py-1 rounded-lg outline-none"
+          className="w-full h-full py-1 rounded-lg bg-white outline-none"
           placeholder="usuario"
           disabled={isLoading}
         />
