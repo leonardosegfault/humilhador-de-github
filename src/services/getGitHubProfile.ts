@@ -34,7 +34,10 @@ export default async function getGitHubProfile(
   if (redis) {
     userData = await redis.get(username);
     userRepos = await redis.get("repos:" + username);
-    cacheHit = true;
+
+    if (userData || userRepos) {
+      cacheHit = true;
+    }
   }
 
   try {
