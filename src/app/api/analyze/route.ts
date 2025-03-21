@@ -2,6 +2,7 @@ import getGitHubProfile, {
   GitHubUser,
   GitHubRepo,
 } from "@/services/getGitHubProfile";
+import redis from "@/services/redis";
 import shuffleArray from "@/utils/shuffleArray";
 import OpenAI from "openai";
 
@@ -25,6 +26,13 @@ export async function GET(req: Request) {
         status: 400,
       }
     );
+  }
+
+  const cachedAnalysis = await redis?.get("analysis:" + username);
+  if (cachedAnalysis) {
+    return Response.json({
+      content: cachedAnalysis,
+    });
   }
 
   let userData: GitHubUser;
@@ -78,7 +86,7 @@ export async function GET(req: Request) {
       }
     }
 
-    const content = await client.chat.completions.create({
+    const completion = await client.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -88,9 +96,15 @@ export async function GET(req: Request) {
       ],
       max_tokens: 1024,
     });
+    const content = completion.choices[0].message.content;
+
+    if (redis) {
+      redis.set("analysis:" + username, completion);
+      redis.expire("analysis:" + username, 60 * 10);
+    }
 
     return Response.json({
-      content: content.choices[0].message.content,
+      content,
     });
   } catch (e) {
     console.error(e);
