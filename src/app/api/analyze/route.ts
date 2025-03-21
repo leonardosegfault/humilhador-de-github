@@ -4,7 +4,7 @@ import getGitHubProfile, {
 } from "@/services/getGitHubProfile";
 import redis from "@/services/redis";
 import shuffleArray from "@/utils/shuffleArray";
-import OpenAI from "openai";
+import OpenAI, { type APIError } from "openai";
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -107,7 +107,16 @@ export async function GET(req: Request) {
       content,
     });
   } catch (e) {
-    console.error(e);
+    if ((e as APIError).status == 429) {
+      return Response.json(
+        {
+          error: "O servidor encontra-se sobrecarregado :(",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
 
     return Response.json(
       {
