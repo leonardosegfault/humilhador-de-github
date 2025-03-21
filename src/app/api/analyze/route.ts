@@ -12,7 +12,7 @@ const client = new OpenAI({
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const username = url.searchParams.get("u");
+  const username = url.searchParams.get("u")?.toLowerCase();
   if (
     !username ||
     !(username.length >= 2 && username.length <= 39) ||
