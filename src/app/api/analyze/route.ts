@@ -7,7 +7,8 @@ import shuffleArray from "@/utils/shuffleArray";
 import OpenAI, { type APIError } from "openai";
 
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: process.env.BASE_URL,
+  apiKey: process.env.API_KEY,
 });
 
 export async function GET(req: Request) {
@@ -87,7 +88,7 @@ export async function GET(req: Request) {
     }
 
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: process.env.MODEL as string,
       messages: [
         {
           role: "user",
@@ -99,7 +100,7 @@ export async function GET(req: Request) {
     const content = completion.choices[0].message.content;
 
     if (redis) {
-      redis.set("analysis:" + username, completion);
+      redis.set("analysis:" + username, content);
       redis.expire("analysis:" + username, 60 * 10);
     }
 
@@ -117,6 +118,8 @@ export async function GET(req: Request) {
         }
       );
     }
+
+    console.error(e);
 
     return Response.json(
       {
