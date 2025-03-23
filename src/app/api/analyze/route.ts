@@ -68,12 +68,12 @@ export async function GET(req: Request) {
     if (userData.bio) prompt += `- Bio é "${userData.bio}"\n`;
 
     if (userRepos.length > 0) {
-      prompt += `\n\nSeus repositórios são:\n`;
+      prompt += `\nSeus repositórios são:\n`;
 
       shuffleArray(userRepos);
 
-      for (const repo of userRepos.slice(10)) {
-        prompt += `- ${repo.name}: ${repo.description}\n`;
+      for (const repo of userRepos.slice(0, 10)) {
+        prompt += `\n- ${repo.name}: ${repo.description ?? "sem descrição"}\n`;
         prompt += `- Criado em ${repo.created_at} e última vez atualizado em ${repo.updated_at};\n`;
         prompt += `- ${repo.stargazers_count} estrelas;\n`;
 
@@ -82,8 +82,6 @@ export async function GET(req: Request) {
         if (repo.language) prompt += `- Feito em ${repo.language};\n`;
         if (repo.forks_count) prompt += `- ${repo.forks_count} forks;\n`;
         if (repo.open_issues > 0) prompt += `- ${repo.open_issues} issues;\n`;
-
-        prompt += "\n";
       }
     }
 
