@@ -12,6 +12,10 @@ const font = Inter({
 export const metadata: Metadata = {
   title: "Humilhador de GitHub",
   description: "O analisador mais sincero de perfis.",
+  openGraph: {
+    title: "Humilhador de GitHub",
+    description: "O analisador mais sincero de perfis.",
+  },
 };
 
 export default function RootLayout({
@@ -20,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <body className={`${font.variable} pb-24 bg-gray-50 antialiased`}>
         <Navbar />
         {children}

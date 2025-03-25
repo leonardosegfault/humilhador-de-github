@@ -22,9 +22,9 @@ export default function UserInput({ isLoading }: { isLoading?: boolean }) {
         Insira seu perfil de merda e analise
       </label>
       <div className="w-2xs px-2 pr-0 flex gap-2 items-center rounded-lg border border-gray-300 text-xl bg-white">
-        <label className="font-bold select-none" htmlFor="username">
+        <span className="select-none" aria-hidden>
           @
-        </label>
+        </span>
         <input
           type="text"
           name="username"
