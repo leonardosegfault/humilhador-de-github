@@ -1,27 +1,49 @@
-import getGitHubProfile, {
-  GitHubUser,
-  GitHubRepo,
-} from "@/services/getGitHubProfile";
-import redis from "@/services/redis";
-import shuffleArray from "@/utils/shuffleArray";
+import { z } from "zod";
 import OpenAI, { type APIError } from "openai";
+import redis from "@/services/redis";
+
+const repoSchema = z.object({
+  name: z.string(),
+  description: z.string().max(350).optional(),
+  isFork: z.boolean(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  stars: z.number().nonnegative().int(),
+  language: z.string().max(16).regex(/\w+/).optional(),
+  forksCount: z.number().nonnegative().int(),
+  isArchived: z.boolean(),
+  openIssues: z.number().nonnegative().int(),
+});
+
+const schema = z.object({
+  username: z
+    .string()
+    .min(2)
+    .max(39)
+    .regex(/^(?!-)[A-Za-z0-9-]+(?!-)$/),
+  name: z.string().max(48).optional(),
+  bio: z.string().max(160).optional(),
+  createdAt: z.string().datetime(),
+  location: z.string().max(48).optional(),
+  publicRepos: z.number().nonnegative().int(),
+  followers: z.number().nonnegative().int(),
+  following: z.number().nonnegative().int(),
+  repos: z.array(repoSchema).max(5),
+});
 
 const client = new OpenAI({
   baseURL: process.env.BASE_URL,
   apiKey: process.env.API_KEY,
 });
 
-export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const username = url.searchParams.get("u")?.toLowerCase();
-  if (
-    !username ||
-    !(username.length >= 2 && username.length <= 39) ||
-    !/^(?!-)[A-Za-z0-9-]+(?!-)$/.test(username)
-  ) {
+export async function POST(req: Request) {
+  const { success, data, error } = schema.safeParse(await req.json());
+  if (!success) {
+    console.error(error);
+
     return Response.json(
       {
-        error: "Usuário inválido ou desconhecido.",
+        error: "Requisição inválida.",
       },
       {
         status: 400,
@@ -29,59 +51,42 @@ export async function GET(req: Request) {
     );
   }
 
-  const cachedAnalysis = await redis?.get("analysis:" + username);
+  const cachedAnalysis = await redis?.get(
+    "analysis:" + data.username.toLowerCase()
+  );
   if (cachedAnalysis) {
     return Response.json({
       content: cachedAnalysis,
     });
   }
 
-  let userData: GitHubUser;
-  let userRepos: GitHubRepo[];
-  try {
-    const data = await getGitHubProfile(username);
-    userData = data.user;
-    userRepos = data.repos;
-  } catch {
-    return Response.json(
-      {
-        error: "Usuário inválido ou desconhecido.",
-      },
-      {
-        status: 400,
-      }
-    );
-  }
-
   try {
     let prompt =
       "Seja extremamente breve, sarcástico e ácido sobre perfil no GitHub a seguir:\n";
 
-    prompt += `- O usuário é "${userData.login}"\n`;
-    prompt += `- Sua conta foi criada em ${userData.created_at}\n`;
-    prompt += `- ${userData.public_repos} repositórios\n`;
-    prompt += `- ${userData.followers} seguidores\n`;
-    prompt += `- Seguindo ${userData.following} devs\n`;
+    prompt += `- O usuário é "${data.username}"\n`;
+    prompt += `- Sua conta foi criada em ${data.createdAt}\n`;
+    prompt += `- ${data.publicRepos} repositórios\n`;
+    prompt += `- ${data.followers} seguidores\n`;
+    prompt += `- Seguindo ${data.following} devs\n`;
 
-    if (userData.name) prompt += `- Seu nome é "${userData.name}"\n`;
-    if (userData.location) prompt += `- ${userData.location}\n`;
-    if (userData.bio) prompt += `- Bio é "${userData.bio}"\n`;
+    if (data.name) prompt += `- Seu nome é "${data.name}"\n`;
+    if (data.location) prompt += `- ${data.location}\n`;
+    if (data.bio) prompt += `- Bio é "${data.bio}"\n`;
 
-    if (userRepos.length > 0) {
+    if (data.repos.length > 0) {
       prompt += `\nSeus repositórios são:\n`;
 
-      shuffleArray(userRepos);
-
-      for (const repo of userRepos.slice(0, 5)) {
+      for (const repo of data.repos.slice(0, 5)) {
         prompt += `\n- ${repo.name}: ${repo.description ?? "sem descrição"}\n`;
-        prompt += `- Criado em ${repo.created_at} e última vez atualizado em ${repo.updated_at};\n`;
-        prompt += `- ${repo.stargazers_count} estrelas;\n`;
+        prompt += `- Criado em ${repo.createdAt} e última vez atualizado em ${repo.updatedAt};\n`;
+        prompt += `- ${repo.stars} estrelas;\n`;
 
-        if (repo.fork) prompt += "- é um fork;\n";
-        if (repo.archived) prompt += "- arquivado;\n";
+        if (repo.isFork) prompt += "- é um fork;\n";
+        if (repo.isArchived) prompt += "- arquivado;\n";
         if (repo.language) prompt += `- Feito em ${repo.language};\n`;
-        if (repo.forks_count) prompt += `- ${repo.forks_count} forks;\n`;
-        if (repo.open_issues > 0) prompt += `- ${repo.open_issues} issues;\n`;
+        if (repo.forksCount) prompt += `- ${repo.forksCount} forks;\n`;
+        if (repo.openIssues > 0) prompt += `- ${repo.openIssues} issues;\n`;
       }
     }
 
@@ -98,8 +103,8 @@ export async function GET(req: Request) {
     const content = completion.choices[0].message.content;
 
     if (redis) {
-      redis.set("analysis:" + username, content);
-      redis.expire("analysis:" + username, 60 * 10);
+      redis.set("analysis:" + data.username.toLowerCase(), content);
+      redis.expire("analysis:" + data.username.toLowerCase(), 60 * 10);
     }
 
     return Response.json({

@@ -1,19 +1,18 @@
-import redis from "./redis";
-
-export interface GitHubUser {
+interface GitHubUser {
+  avatar_url: string;
   login: string;
-  name: string;
-  bio: string;
-  location: string;
+  name?: string;
+  bio?: string;
+  location?: string;
   public_repos: number;
   followers: number;
   following: number;
   created_at: string;
 }
 
-export interface GitHubRepo {
+interface GitHubRepo {
   name: string;
-  description: string;
+  description?: string;
   fork: boolean;
   created_at: string;
   updated_at: string;
@@ -24,78 +23,41 @@ export interface GitHubRepo {
   open_issues: number;
 }
 
+function throwError(status: number) {
+  if (status == 404) {
+    throw new Error("O usuário não foi encontrado.");
+  } else if (status == 500) {
+    throw new Error(
+      "O estagiário do GitHub fez merda na API. Aguarde até que se estabilize."
+    );
+  } else {
+    throw new Error(
+      `Um erro desconhecido ocorreu (HTTP Status ${status}) — também conhecido como "meu dev foi muito preguiçoso de especificar o motivo com precisão".`
+    );
+  }
+}
+
 export default async function getGitHubProfile(
   username: string
 ): Promise<{ user: GitHubUser; repos: GitHubRepo[] }> {
-  const headers = process.env.GITHUB_TOKEN
-    ? {
-        Authorization: process.env.GITHUB_TOKEN,
-      }
-    : undefined;
-  let userData: GitHubUser | null;
-  let userRepos: GitHubRepo[] | null;
-  let cacheHit = false;
-
-  if (redis) {
-    userData = await redis.get(username);
-    userRepos = await redis.get("repos:" + username);
-
-    if (userData || userRepos) {
-      cacheHit = true;
-    }
-  }
-
   try {
-    let res = await fetch(`https://api.github.com/users/${username}`, {
-      headers,
-    });
-    if (res.status != 200) throw new Error(res.statusText);
+    let res = await fetch(`https://api.github.com/users/${username}`);
+    if (res.status != 200) throwError(res.status);
+    const user = (await res.json()) as GitHubUser;
 
-    userData = (await res.json()) as GitHubUser;
+    res = await fetch(`https://api.github.com/users/${username}/repos`);
+    if (res.status != 200) throwError(res.status);
+    const repos = (await res.json()) as GitHubRepo[];
 
-    res = await fetch(`https://api.github.com/users/${username}/repos`, {
-      headers,
-    });
-    if (res.status != 200) throw new Error(res.statusText);
+    return {
+      user,
+      repos,
+    };
+  } catch (e) {
+    console.error(e);
 
-    userRepos = (await res.json()) as GitHubRepo[];
-    if (redis && !cacheHit) {
-      await redis.set(username, {
-        login: userData.login,
-        name: userData.name,
-        bio: userData.bio,
-        location: userData.location,
-        public_repos: userData.public_repos,
-        followers: userData.followers,
-        following: userData.following,
-        created_at: userData.created_at,
-      });
-
-      await redis.set(
-        "repos:" + username,
-        userRepos.map((v) => ({
-          name: v.name,
-          description: v.description,
-          fork: v.fork,
-          created_at: v.created_at,
-          updated_at: v.updated_at,
-          stargazers_count: v.stargazers_count,
-          language: v.language,
-          forks_count: v.forks_count,
-          archived: v.archived,
-          open_issues: v.open_issues,
-        }))
-      );
-
-      redis.expire(username, 60 * 10);
-      redis.expire("repos:" + username, 60 * 10);
-    }
-  } catch {
-    throw new Error("Failed to retrieve user data");
+    throw new Error(
+      "O GitHub mandou um resultado que não era JSON (isso é raro, viu?)"
+    );
   }
-
-  return {
-    user: userData,
-    repos: userRepos,
-  };
 }

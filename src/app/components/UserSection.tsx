@@ -1,8 +1,38 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import UserInput from "./UserInput";
 import Markdown from "react-markdown";
+import getGitHubProfile from "@/services/getGitHubProfile";
+import shuffleArray from "@/utils/shuffleArray";
+import UserInput from "./UserInput";
+import DonationMessage from "./DonationMessage";
+import ErrorMessage from "./ErrorMessage";
+
+type APIBody = GitHubUser & { repos: GitHubRepo[] };
+
+interface GitHubUser {
+  username: string;
+  name?: string;
+  bio?: string;
+  createdAt: string;
+  location?: string;
+  publicRepos: number;
+  followers: number;
+  following: number;
+}
+
+interface GitHubRepo {
+  name: string;
+  description?: string;
+  isFork: boolean;
+  createdAt: string;
+  updatedAt: string;
+  stars: number;
+  language: string;
+  forksCount: number;
+  isArchived: boolean;
+  openIssues: number;
+}
 
 export default function UserSection() {
   const [isLoading, setLoading] = useState(false);
@@ -26,27 +56,42 @@ export default function UserSection() {
     setDonateHidden(true);
 
     try {
-      let res = await fetch("https://api.github.com/users/" + username);
-      if (res.status != 200) {
-        let errMessage = "";
-        if (res.status == 403) {
-          errMessage =
-            "Você está fazendo muitas análises e o GitHub não está gostando disso.";
-        } else if (res.status == 404) {
-          errMessage = "Perfil não encontrado";
-        } else if (res.status == 500) {
-          errMessage = "O estagiário fez merda na API do GitHub.";
-        }
+      const { user, repos } = await getGitHubProfile(username as string);
 
-        throw new Error(errMessage);
-      }
+      setAvatar(user.avatar_url);
+      setName(user.name ?? user.login);
 
-      const githubData = await res.json();
+      shuffleArray(repos);
 
-      setAvatar(githubData.avatar_url);
-      setName(githubData.name ?? githubData.login);
+      const body: APIBody = {
+        username: user.login,
+        createdAt: user.created_at,
+        location: user.location,
+        publicRepos: user.public_repos,
+        followers: user.followers,
+        following: user.following,
+        repos: repos.slice(0, 5).map((v) => ({
+          name: v.name,
+          description: v.description ?? undefined,
+          isFork: v.fork,
+          createdAt: v.created_at,
+          updatedAt: v.updated_at,
+          stars: v.stargazers_count,
+          language: v.language ?? undefined,
+          forksCount: v.forks_count,
+          isArchived: v.archived,
+          openIssues: v.open_issues,
+        })),
+      };
 
-      res = await fetch("/api/analyze?u=" + username);
+      if (user.name) body.name = user.name;
+      if (user.bio) body.bio = user.bio;
+      if (user.location) body.location = user.location;
+
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        body: JSON.stringify(body),
+      });
       if (res.status != 200) {
         let errMessage = res.statusText || "HTTP Status " + res.status;
 
@@ -63,10 +108,7 @@ export default function UserSection() {
       length = tempText.length;
     } catch (e) {
       setText("");
-      setError(
-        (e as Error).message ||
-          'Um erro desconhecido ocorreu — também conhecido como "meu desenvolvedor foi muito preguiçoso em não especificar o erro".'
-      );
+      setError((e as Error).message);
       setLoading(false);
       setDonateHidden(true);
 
@@ -93,14 +135,6 @@ export default function UserSection() {
         <UserInput isLoading={isLoading} />
       </form>
 
-      {error && (
-        <div className="mt-10 p-4 w-sm md:w-lg break-words rounded-lg bg-red-100 border border-red-500 text-red-500">
-          <h3 className="font-bold">Falha ao realizar uma análise</h3>
-          <p className="my-2">{error}</p>
-          <p className="my-2">Tente novamente mais tarde.</p>
-        </div>
-      )}
-
       {text && (
         <div className="mt-10 p-4 w-sm md:w-lg break-words rounded-lg bg-linear-to-br from-lime-100 to-green-200">
           <div className="*:mx-auto">
@@ -120,29 +154,8 @@ export default function UserSection() {
         </div>
       )}
 
-      {!isDonateHidden && (
-        <div className="mt-10 p-4 w-sm md:w-lg break-words rounded-lg bg-blue-100 border border-blue-300">
-          <h3 className="font-bold">Gostou? Então apoie!</h3>
-          <p>
-            O <b className="text-semibold">Humilhador de GitHub</b> é um projeto
-            gratuito e de código aberto, mas que exige investimentos — A IA não
-            é totalmente de graça... ainda.
-          </p>
-          <p>
-            Ajude o projeto com qualquer valor no Pix e permita que outras
-            pessoas também tenham a oportunidade de serem humilhadas.
-          </p>
-
-          <div className="w-full mt-2 text-right">
-            <a
-              href="https://livepix.gg/leosegfault"
-              className="p-1 px-4 bg-blue-500 text-base rounded-lg text-white"
-            >
-              Apoiar
-            </a>
-          </div>
-        </div>
-      )}
+      {error && <ErrorMessage error={error} />}
+      {!isDonateHidden && <DonationMessage />}
     </section>
   );
 }
