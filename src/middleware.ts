@@ -31,9 +31,7 @@ export async function middleware(req: NextRequest) {
   }
 
   try {
-    const { success } = await ratelimit.limit("api", {
-      ip,
-    });
+    const { success } = await ratelimit.limit(ip);
     if (!success) {
       return NextResponse.json(
         {
