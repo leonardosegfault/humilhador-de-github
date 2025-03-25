@@ -28,7 +28,7 @@ interface GitHubRepo {
   createdAt: string;
   updatedAt: string;
   stars: number;
-  language: string;
+  language?: string;
   forksCount: number;
   isArchived: boolean;
   openIssues: number;
@@ -66,7 +66,6 @@ export default function UserSection() {
       const body: APIBody = {
         username: user.login,
         createdAt: user.created_at,
-        location: user.location,
         publicRepos: user.public_repos,
         followers: user.followers,
         following: user.following,
