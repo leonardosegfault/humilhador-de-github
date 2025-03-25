@@ -72,7 +72,7 @@ export async function GET(req: Request) {
 
       shuffleArray(userRepos);
 
-      for (const repo of userRepos.slice(0, 10)) {
+      for (const repo of userRepos.slice(0, 5)) {
         prompt += `\n- ${repo.name}: ${repo.description ?? "sem descrição"}\n`;
         prompt += `- Criado em ${repo.created_at} e última vez atualizado em ${repo.updated_at};\n`;
         prompt += `- ${repo.stargazers_count} estrelas;\n`;
@@ -93,7 +93,7 @@ export async function GET(req: Request) {
           content: prompt,
         },
       ],
-      max_tokens: 1024,
+      max_tokens: 512,
     });
     const content = completion.choices[0].message.content;
 
