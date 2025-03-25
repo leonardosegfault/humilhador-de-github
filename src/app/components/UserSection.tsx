@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import UserInput from "./UserInput";
+import Markdown from "react-markdown";
 
 export default function UserSection() {
   const [isLoading, setLoading] = useState(false);
@@ -113,11 +114,9 @@ export default function UserSection() {
             <h2 className="text-center text-xl font-bold">{name}</h2>
           </div>
 
-          {text.split("\n").map((v, i) => (
-            <p className="w-full my-2" key={i}>
-              {v}
-            </p>
-          ))}
+          <div className="[&_p]:mt-2 [&_ol]:list-decimal [&_ul]:list-disc [&_li]:ml-4 list-inside">
+            {<Markdown>{text}</Markdown>}
+          </div>
         </div>
       )}
 
