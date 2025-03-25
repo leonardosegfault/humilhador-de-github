@@ -27,6 +27,11 @@ export interface GitHubRepo {
 export default async function getGitHubProfile(
   username: string
 ): Promise<{ user: GitHubUser; repos: GitHubRepo[] }> {
+  const headers = process.env.GITHUB_TOKEN
+    ? {
+        Authorization: process.env.GITHUB_TOKEN,
+      }
+    : undefined;
   let userData: GitHubUser | null;
   let userRepos: GitHubRepo[] | null;
   let cacheHit = false;
@@ -41,12 +46,16 @@ export default async function getGitHubProfile(
   }
 
   try {
-    let res = await fetch(`https://api.github.com/users/${username}`);
+    let res = await fetch(`https://api.github.com/users/${username}`, {
+      headers,
+    });
     if (res.status != 200) throw new Error(res.statusText);
 
     userData = (await res.json()) as GitHubUser;
 
-    res = await fetch(`https://api.github.com/users/${username}/repos`);
+    res = await fetch(`https://api.github.com/users/${username}/repos`, {
+      headers,
+    });
     if (res.status != 200) throw new Error(res.statusText);
 
     userRepos = (await res.json()) as GitHubRepo[];
