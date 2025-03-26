@@ -9,7 +9,7 @@ const repoSchema = z.object({
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   stars: z.number().nonnegative().int(),
-  language: z.string().max(16).regex(/\w+/).optional(),
+  language: z.string().max(48).regex(/\w+/).optional(),
   forksCount: z.number().nonnegative().int(),
   isArchived: z.boolean(),
   openIssues: z.number().nonnegative().int(),
