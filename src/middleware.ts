@@ -12,10 +12,11 @@ if (redis) {
 }
 
 export const config = {
-  matcher: "/api/:path*",
+  matcher: "/api/analyze",
 };
 
 export async function middleware(req: NextRequest) {
+  if (req.method != "POST") return NextResponse.redirect(new URL("/", req.url));
   if (!redis) return; // Ratelimiting desativado
 
   const ip = req.headers.get("x-forwarded-for");
