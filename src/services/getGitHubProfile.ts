@@ -40,24 +40,16 @@ function throwError(status: number) {
 export default async function getGitHubProfile(
   username: string
 ): Promise<{ user: GitHubUser; repos: GitHubRepo[] }> {
-  try {
-    let res = await fetch(`https://api.github.com/users/${username}`);
-    if (res.status != 200) throwError(res.status);
-    const user = (await res.json()) as GitHubUser;
+  let res = await fetch(`https://api.github.com/users/${username}`);
+  if (res.status != 200) throwError(res.status);
+  const user = (await res.json()) as GitHubUser;
 
-    res = await fetch(`https://api.github.com/users/${username}/repos`);
-    if (res.status != 200) throwError(res.status);
-    const repos = (await res.json()) as GitHubRepo[];
+  res = await fetch(`https://api.github.com/users/${username}/repos`);
+  if (res.status != 200) throwError(res.status);
+  const repos = (await res.json()) as GitHubRepo[];
 
-    return {
-      user,
-      repos,
-    };
-  } catch (e) {
-    console.error(e);
-
-    throw new Error(
-      "O GitHub mandou um resultado que não era JSON (isso é raro, viu?)"
-    );
-  }
+  return {
+    user,
+    repos,
+  };
 }

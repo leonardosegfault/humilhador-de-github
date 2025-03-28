@@ -94,15 +94,20 @@ export default function UserSection() {
       if (res.status != 200) {
         let errMessage = res.statusText || "HTTP Status " + res.status;
 
-        try {
-          const apiData = await res.json();
-          if (apiData.error) errMessage = apiData.error;
-        } catch {}
+        if (res.status == 504) {
+          errMessage =
+            "A API demorou demais para te humilhar. Tente novamente.";
+        } else {
+          try {
+            const apiData = await res.json();
+            if (apiData.error) errMessage = apiData.error;
+          } catch {}
+        }
 
         throw new Error(errMessage);
       }
-      const apiData = await res.json();
 
+      const apiData = await res.json();
       tempText = apiData.content;
       length = tempText.length;
     } catch (e) {
