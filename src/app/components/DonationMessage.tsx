@@ -7,7 +7,7 @@ export default function DonationMessage() {
         gratuito e de código aberto, mas que exige investimentos — A IA não é
         totalmente de graça... ainda.
       </p>
-      <p>
+      <p className="mt-2">
         Ajude o projeto com qualquer valor no Pix e permita que outras pessoas
         também tenham a oportunidade de serem humilhadas.
       </p>
