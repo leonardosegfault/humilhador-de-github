@@ -50,6 +50,11 @@ export default function UserSection() {
 
     e.preventDefault();
 
+    if (!username) {
+      setError("Você não inseriu um usuário para ser analisado!");
+      return;
+    }
+
     setText("");
     setError("");
     setLoading(true);

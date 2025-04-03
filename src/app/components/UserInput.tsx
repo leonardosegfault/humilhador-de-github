@@ -42,7 +42,7 @@ export default function UserInput({ isLoading }: { isLoading?: boolean }) {
 
       {isLoading ? (
         <button
-          type="submit"
+          disabled
           className="mt-2 w-full py-1 flex gap-2 justify-center items-center rounded-lg bg-zinc-600 text-white"
         >
           <LoaderCircle className="size-4 animate-spin" />
