@@ -11,6 +11,7 @@ interface GitHubUser {
 }
 
 interface GitHubRepo {
+  id: number;
   name: string;
   description?: string;
   fork: boolean;
@@ -44,7 +45,9 @@ export default async function getGitHubProfile(
   if (res.status != 200) throwError(res.status);
   const user = (await res.json()) as GitHubUser;
 
-  res = await fetch(`https://api.github.com/users/${username}/repos`);
+  res = await fetch(
+    `https://api.github.com/users/${username}/repos?per_page=100`
+  );
   if (res.status != 200) throwError(res.status);
   const repos = (await res.json()) as GitHubRepo[];
 

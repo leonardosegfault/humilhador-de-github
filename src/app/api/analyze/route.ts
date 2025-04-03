@@ -61,17 +61,16 @@ export async function POST(req: Request) {
   }
 
   try {
-    let prompt =
-      "Seja extremamente breve, sarcástico e ácido sobre perfil no GitHub a seguir:\n";
+    let prompt = `Assumindo que hoje é ${new Date().toLocaleString()}, seja extremamente breve, sarcástico e ácido sobre perfil no GitHub a seguir:\n`;
 
-    prompt += `- O usuário é "${data.username}"\n`;
+    prompt += `- O @ é "${data.username}"\n`;
     prompt += `- Sua conta foi criada em ${data.createdAt}\n`;
     prompt += `- ${data.publicRepos} repositórios\n`;
     prompt += `- ${data.followers} seguidores\n`;
-    prompt += `- Seguindo ${data.following} devs\n`;
+    prompt += `- Seguindo ${data.following}\n`;
 
     if (data.name) prompt += `- Seu nome é "${data.name}"\n`;
-    if (data.location) prompt += `- ${data.location}\n`;
+    if (data.location) prompt += `- Localizado em "${data.location}"\n`;
     if (data.bio) prompt += `- Bio é "${data.bio}"\n`;
 
     if (data.repos.length > 0) {
@@ -79,7 +78,11 @@ export async function POST(req: Request) {
 
       for (const repo of data.repos.slice(0, 5)) {
         prompt += `\n- ${repo.name}: ${repo.description ?? "sem descrição"}\n`;
-        prompt += `- Criado em ${repo.createdAt} e última vez atualizado em ${repo.updatedAt};\n`;
+        if (repo.createdAt == repo.updatedAt) {
+          prompt += `- Criado em ${repo.createdAt};\n`;
+        } else {
+          prompt += `- Criado em ${repo.createdAt} e última vez atualizado em ${repo.updatedAt};\n`;
+        }
         prompt += `- ${repo.stars} estrelas;\n`;
 
         if (repo.isFork) prompt += "- é um fork;\n";

@@ -67,6 +67,15 @@ export default function UserSection() {
       setName(user.name ?? user.login);
 
       shuffleArray(repos);
+      const analysisRepos = repos.slice(0, 5);
+
+      // Incluir pelo menos um repositório popular
+      const mostPopularRepo = repos.sort(
+        (a, b) => b.stargazers_count - a.stargazers_count
+      )[0];
+      if (analysisRepos.findIndex((v) => v.id == mostPopularRepo.id) == -1) {
+        analysisRepos[0] = mostPopularRepo;
+      }
 
       const body: APIBody = {
         username: user.login,
@@ -74,7 +83,7 @@ export default function UserSection() {
         publicRepos: user.public_repos,
         followers: user.followers,
         following: user.following,
-        repos: repos.slice(0, 5).map((v) => ({
+        repos: analysisRepos.map((v) => ({
           name: v.name,
           description: v.description ?? undefined,
           isFork: v.fork,
