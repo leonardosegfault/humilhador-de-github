@@ -7,8 +7,9 @@ import shuffleArray from "@/utils/shuffleArray";
 import UserInput from "./UserInput";
 import DonationMessage from "./DonationMessage";
 import ErrorMessage from "./ErrorMessage";
+import { CustomLLMInput } from "./CustomLLMInput";
 
-type APIBody = GitHubUser & { repos: GitHubRepo[] };
+type APIBody = GitHubUser & { repos: GitHubRepo[], llm?: LLMConfig };
 
 interface GitHubUser {
   username: string;
@@ -34,6 +35,12 @@ interface GitHubRepo {
   openIssues: number;
 }
 
+interface LLMConfig {
+  url: string;
+  model: string;
+  apiKey: string
+}
+
 export default function UserSection() {
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -45,6 +52,9 @@ export default function UserSection() {
   async function handleSubmit(e: FormEvent) {
     const data = new FormData(e.target as HTMLFormElement);
     const username = data.get("username");
+    const model = data.get("model")
+    const url = data.get("url")
+    const apiKey = data.get("apiKey")
     let tempText = "";
     let length = 0;
 
@@ -82,6 +92,14 @@ export default function UserSection() {
           openIssues: v.open_issues,
         })),
       };
+
+      if (url && model) {
+        body.llm = {
+          url: url as string,
+          model: model as string,
+          apiKey: apiKey as string
+        }
+      }
 
       if (user.name) body.name = user.name;
       if (user.bio) body.bio = user.bio;
@@ -136,6 +154,8 @@ export default function UserSection() {
   return (
     <section>
       <form className="w-fit mx-auto" onSubmit={handleSubmit}>
+        <CustomLLMInput isLoading={isLoading} />
+
         <UserInput isLoading={isLoading} />
       </form>
 
