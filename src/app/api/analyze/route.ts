@@ -29,11 +29,13 @@ const schema = z.object({
   followers: z.number().nonnegative().int(),
   following: z.number().nonnegative().int(),
   repos: z.array(repoSchema).max(5),
-});
-
-const client = new OpenAI({
-  baseURL: process.env.BASE_URL,
-  apiKey: process.env.API_KEY,
+  llm: z
+    .object({
+      url: z.string().url(),
+      model: z.string(),
+      apiKey: z.string(),
+    })
+    .optional(),
 });
 
 export async function POST(req: Request) {
@@ -50,6 +52,11 @@ export async function POST(req: Request) {
       }
     );
   }
+
+  const client = new OpenAI({
+    baseURL: data.llm?.url || process.env.BASE_URL,
+    apiKey: data.llm?.apiKey || process.env.API_KEY,
+  });
 
   const cachedAnalysis = await redis?.get(
     "analysis:" + data.username.toLowerCase()
@@ -91,7 +98,7 @@ export async function POST(req: Request) {
     }
 
     const completion = await client.chat.completions.create({
-      model: process.env.MODEL as string,
+      model: data.llm?.model || (process.env.MODEL as string),
       messages: [
         {
           role: "user",
