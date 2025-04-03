@@ -43,7 +43,8 @@ export async function POST(req: Request) {
 
     return Response.json(
       {
-        error: "Requisição inválida.",
+        error:
+          "Requisição inválida. Caso acredite que isso é um erro, avise na aba Issue do repositório no GitHub.",
       },
       {
         status: 400,
