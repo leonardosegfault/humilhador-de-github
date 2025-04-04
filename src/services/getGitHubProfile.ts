@@ -57,6 +57,12 @@ export default async function getGitHubProfile(
   if (res.status != 200) throwError(res.status);
   const repos = (await res.json()) as GitHubRepo[];
 
+  for (const repo of repos) {
+    if (repo.description) {
+      repo.description = truncateString(repo.description, 350);
+    }
+  }
+
   return {
     user,
     repos,
