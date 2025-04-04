@@ -1,3 +1,5 @@
+import truncateString from "@/utils/truncateString";
+
 interface GitHubUser {
   avatar_url: string;
   login: string;
@@ -44,6 +46,10 @@ export default async function getGitHubProfile(
   let res = await fetch(`https://api.github.com/users/${username}`);
   if (res.status != 200) throwError(res.status);
   const user = (await res.json()) as GitHubUser;
+
+  if (user.location) {
+    user.location = truncateString(user.location, 48);
+  }
 
   res = await fetch(
     `https://api.github.com/users/${username}/repos?per_page=100`
