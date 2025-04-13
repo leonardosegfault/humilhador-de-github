@@ -1,4 +1,5 @@
 import truncateString from "@/utils/truncateString";
+import { t } from "i18next";
 
 interface GitHubUser {
   avatar_url: string;
@@ -28,15 +29,11 @@ interface GitHubRepo {
 
 function throwError(status: number) {
   if (status == 404) {
-    throw new Error("O usuário não foi encontrado.");
+    throw new Error(t("errors.notFound"));
   } else if (status == 500) {
-    throw new Error(
-      "O estagiário do GitHub fez merda na API. Aguarde até que se estabilize."
-    );
+    throw new Error(t("errors.github"));
   } else {
-    throw new Error(
-      `Um erro desconhecido ocorreu (HTTP Status ${status}) — também conhecido como "meu dev foi muito preguiçoso de especificar o motivo com precisão".`
-    );
+    throw new Error(t("errors.unknown"));
   }
 }
 

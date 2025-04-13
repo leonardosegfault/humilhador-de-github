@@ -29,6 +29,7 @@ const schema = z.object({
   followers: z.number().nonnegative().int(),
   following: z.number().nonnegative().int(),
   repos: z.array(repoSchema).max(5),
+  language: z.string().length(2),
 });
 
 const client = new OpenAI({
@@ -62,7 +63,12 @@ export async function POST(req: Request) {
   }
 
   try {
-    let prompt = `Assumindo que hoje é ${new Date().toLocaleString()}, seja extremamente breve, sarcástico e ácido sobre perfil no GitHub a seguir:\n`;
+    let prompt = `Assumindo que hoje é ${new Date().toLocaleString()}, seja extremamente breve, sarcástico e ácido sobre perfil no GitHub a seguir`;
+    if (data.language == "en") {
+      prompt += " e responda em Inglês:\n";
+    } else {
+      prompt += ":\n";
+    }
 
     prompt += `- O @ é "${data.username}"\n`;
     prompt += `- Sua conta foi criada em ${data.createdAt}\n`;

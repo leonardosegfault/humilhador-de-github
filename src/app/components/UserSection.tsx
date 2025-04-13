@@ -7,8 +7,9 @@ import shuffleArray from "@/utils/shuffleArray";
 import UserInput from "./UserInput";
 import DonationMessage from "./DonationMessage";
 import ErrorMessage from "./ErrorMessage";
+import i18n from "@/services/i18n";
 
-type APIBody = GitHubUser & { repos: GitHubRepo[] };
+type APIBody = GitHubUser & { repos: GitHubRepo[]; language: string };
 
 interface GitHubUser {
   username: string;
@@ -35,6 +36,7 @@ interface GitHubRepo {
 }
 
 export default function UserSection() {
+  const { t } = i18n;
   const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [text, setText] = useState("");
@@ -51,7 +53,7 @@ export default function UserSection() {
     e.preventDefault();
 
     if (!username) {
-      setError("Você não inseriu um usuário para ser analisado!");
+      setError(t("errors.noUser"));
       return;
     }
 
@@ -95,6 +97,7 @@ export default function UserSection() {
           isArchived: v.archived,
           openIssues: v.open_issues,
         })),
+        language: i18n.language,
       };
 
       if (user.name) body.name = user.name;
@@ -109,8 +112,7 @@ export default function UserSection() {
         let errMessage = res.statusText || "HTTP Status " + res.status;
 
         if (res.status == 504) {
-          errMessage =
-            "A API demorou demais para te humilhar. Tente novamente.";
+          errMessage = t("errors.timeout");
         } else {
           try {
             const apiData = await res.json();
