@@ -156,19 +156,19 @@ export default function UserSection() {
       </form>
 
       {text && (
-        <div className="mt-10 p-4 w-sm md:w-lg break-words rounded-lg bg-linear-to-br from-lime-100 to-green-200">
+        <div className="mt-10 p-4 w-sm md:w-xl break-words rounded-lg bg-emerald-100 text-zinc-800">
           <div className="*:mx-auto">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={avatar}
               alt="avatar"
-              className="size-32 rounded-full bg-gray-50 select-none"
+              className="size-32 rounded-full border border-zinc-200 bg-zinc-50 select-none"
             />
 
             <h2 className="text-center text-xl font-bold">{name}</h2>
           </div>
 
-          <div className="[&_p]:mt-2 [&_ol]:list-decimal [&_ul]:list-disc [&_li]:ml-4 list-inside">
+          <div className="mt-4 [&_p]:mt-4 [&_ol]:list-decimal [&_ul]:list-disc [&_li]:ml-4 list-inside">
             {<Markdown>{text}</Markdown>}
           </div>
         </div>

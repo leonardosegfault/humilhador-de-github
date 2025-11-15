@@ -25,7 +25,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${font.variable} pb-24 bg-gray-50 antialiased`}>
+      <body
+        className={`${font.variable} pb-24 bg-[length:100%_600px] bg-no-repeat bg-linear-to-b from-emerald-50 antialiased`}
+      >
         <Navbar />
         {children}
         <Analytics />

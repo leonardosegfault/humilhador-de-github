@@ -16,17 +16,14 @@ export default function UserInput({ isLoading }: { isLoading?: boolean }) {
   }
 
   return (
-    <>
-      <label
-        className="text-center text-zinc-700 select-none"
-        htmlFor="username"
-      >
+    <div className="text-center">
+      <label className="text-zinc-600 select-none" htmlFor="username">
         {t("label")}
       </label>
-      <div className="w-2xs px-2 pr-0 flex gap-2 items-center rounded-lg border border-gray-300 text-xl bg-white">
-        <span className="select-none" aria-hidden>
-          @
-        </span>
+      <div className="flex mt-4 px-6 py-2 gap-2 w-xs items-center border border-zinc-200 bg-white rounded-4xl text-xl">
+        <label className="text-zinc-600 select-none" htmlFor="username">
+          github.com/
+        </label>
         <input
           type="text"
           name="username"
@@ -36,7 +33,7 @@ export default function UserInput({ isLoading }: { isLoading?: boolean }) {
           maxLength={39}
           onChange={handleInput}
           pattern="^(?!-)[A-Za-z0-9\-]+(?!-)$"
-          className="w-full h-full py-1 rounded-lg bg-white outline-none"
+          className="w-full outline-none"
           placeholder={t("placeholder")}
           disabled={isLoading}
         />
@@ -45,19 +42,19 @@ export default function UserInput({ isLoading }: { isLoading?: boolean }) {
       {isLoading ? (
         <button
           disabled
-          className="mt-2 w-full py-1 flex gap-2 justify-center items-center rounded-lg bg-zinc-600 text-white"
+          className="mt-4 flex gap-4 w-full py-2 items-center justify-center rounded-4xl font-medium bg-zinc-700 text-zinc-200"
         >
-          <LoaderCircle className="size-4 animate-spin" />
+          <LoaderCircle className="size-6 animate-spin" />
           {t("analyzing")}
         </button>
       ) : (
         <button
           type="submit"
-          className="mt-2 w-full py-1 transition-transform hover:scale-110 hover:-rotate-3 rounded-lg bg-green-600 text-white cursor-pointer"
+          className="mt-4 w-full py-2 transition-transform hover:scale-110 shadow rounded-4xl font-medium bg-green-600 text-white cursor-pointer"
         >
           {t("analyze")}
         </button>
       )}
-    </>
+    </div>
   );
 }
