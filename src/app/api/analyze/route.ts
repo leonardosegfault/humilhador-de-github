@@ -38,8 +38,6 @@ const client = new OpenAI({
   apiKey: process.env.API_KEY,
 });
 
-export const runtime = "edge";
-
 export async function POST(req: Request) {
   const { success, data, error } = schema.safeParse(await req.json());
   if (!success) {
