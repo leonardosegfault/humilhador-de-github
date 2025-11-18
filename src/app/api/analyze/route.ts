@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { NextResponse } from "next/server";
 import OpenAI, { type APIError } from "openai";
 import redis from "@/services/redis";
 
@@ -37,6 +38,8 @@ const client = new OpenAI({
   apiKey: process.env.API_KEY,
 });
 
+export const runtime = "edge";
+
 export async function POST(req: Request) {
   const { success, data, error } = schema.safeParse(await req.json());
   if (!success) {
@@ -57,9 +60,7 @@ export async function POST(req: Request) {
     "analysis:" + data.username.toLowerCase()
   );
   if (cachedAnalysis) {
-    return Response.json({
-      content: cachedAnalysis,
-    });
+    return new NextResponse(cachedAnalysis as string);
   }
 
   try {
@@ -108,17 +109,37 @@ export async function POST(req: Request) {
           content: prompt,
         },
       ],
-      max_tokens: 512,
+      max_tokens: 1280,
+      stream: true,
     });
-    const content = completion.choices[0].message.content;
 
-    if (redis) {
-      redis.set("analysis:" + data.username.toLowerCase(), content);
-      redis.expire("analysis:" + data.username.toLowerCase(), 60 * 10);
-    }
+    let content = "";
+    const stream = new ReadableStream({
+      async pull(controller) {
+        for await (const event of completion) {
+          const choice = event.choices[0];
+          if (choice.finish_reason == "stop") {
+            break;
+          }
 
-    return Response.json({
-      content,
+          const text = choice.delta.content;
+          content += text;
+          controller.enqueue(text);
+        }
+
+        if (redis) {
+          redis.set("analysis:" + data.username.toLowerCase(), content);
+          redis.expire("analysis:" + data.username.toLowerCase(), 60 * 10);
+        }
+
+        controller.close();
+      },
+    });
+
+    return new NextResponse(stream, {
+      headers: {
+        "Content-Type": "text/plain",
+      },
     });
   } catch (e) {
     if ((e as APIError).status == 429) {

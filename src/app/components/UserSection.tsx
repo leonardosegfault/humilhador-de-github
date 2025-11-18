@@ -47,8 +47,6 @@ export default function UserSection() {
   async function handleSubmit(e: FormEvent) {
     const data = new FormData(e.target as HTMLFormElement);
     const username = data.get("username");
-    let tempText = "";
-    let length = 0;
 
     e.preventDefault();
 
@@ -121,11 +119,20 @@ export default function UserSection() {
         }
 
         throw new Error(errMessage);
+      } else if (res.body) {
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+
+        let chunk;
+        let content = "";
+        while (!(chunk = await reader.read())?.done) {
+          content += decoder.decode(chunk.value);
+          setText(content);
+        }
       }
 
-      const apiData = await res.json();
-      tempText = apiData.content;
-      length = tempText.length;
+      setLoading(false);
+      setDonateHidden(false);
     } catch (e) {
       setText("");
       setError((e as Error).message);
@@ -136,17 +143,6 @@ export default function UserSection() {
 
       return;
     }
-
-    const int = setInterval(() => {
-      if (length < 0) {
-        clearInterval(int);
-        setLoading(false);
-        setDonateHidden(false);
-        return;
-      }
-
-      setText(tempText.slice(0, tempText.length - length--));
-    }, 30);
   }
 
   return (
