@@ -116,10 +116,6 @@ export async function POST(req: Request) {
       async pull(controller) {
         for await (const event of completion) {
           const choice = event.choices[0];
-          if (choice.finish_reason == "stop") {
-            break;
-          }
-
           const text = choice.delta.content;
           content += text;
           controller.enqueue(text);
