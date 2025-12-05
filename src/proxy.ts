@@ -14,7 +14,7 @@ export const config = {
   matcher: "/api/analyze",
 };
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   if (req.method != "POST") return NextResponse.redirect(new URL("/", req.url));
   if (!redis) return; // Ratelimiting desativado
 
