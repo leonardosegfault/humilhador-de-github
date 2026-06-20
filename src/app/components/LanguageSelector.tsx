@@ -15,6 +15,10 @@ export default function LanguageSelector() {
       code: "en",
       text: "🇺🇸 English",
     },
+    {
+      code: "es",
+      text: "🇪🇸 Español",
+    },
   ];
   const [language, setLanguage] = useState<string | null>(null);
 

@@ -62,6 +62,35 @@ const resources: Resource = {
       },
     },
   },
+  es: {
+    translation: {
+      title: "Humillador de GitHub",
+      description: "Tus proyectos ni sequiera son tan buenos...",
+      support: "Apoyar",
+      label: "Introduce tu perfil de mierda y analiza",
+      analyze: "Analizar",
+      analyzing: "Analizando",
+      placeholder: "usuario",
+      errors: {
+        title: "Error ao realizar el análisis",
+        try: "Inténtalo de nuevo más tarde.",
+        noUser: "¡No has introducido ningún usuario para analizar!",
+        notFound: "El usuario no fue encontrado.",
+        timeout: "La API tardó demasiado en humillarte.",
+        github:
+          "El becario de GitHub la cagó en la API. Espera hasta que se estabilice.",
+        unknown:
+          'Ocurrió un error desconocido — también conocido como "mi dev fue demasiado perezoso para especificar el motivo con precisión"',
+      },
+      donation: {
+        title: "¿Te gustó? ¡Entonces apoya!",
+        content: [
+          "El Humillador de GitHub es un proyecto gratuito y de código abierto, pero requiere inversión — ¡la IA no es gratis!",
+          "Ayuda al proyecto con cualquier cantidad a través de Pix y permite que outras personas también tengan la oportunidad de ser humilladas.",
+        ],
+      },
+    },
+  },
 };
 
 i18n.use(initReactI18next).init({

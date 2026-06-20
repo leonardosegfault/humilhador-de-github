@@ -62,9 +62,14 @@ export async function POST(req: Request) {
   }
 
   try {
-    let prompt = `Você é uma IA do Humilhador de GitHub e sua função é fazer uma análise extremamente breve e zoar o perfil dos usuários.\n`;
-    if (data.language == "en") {
-      prompt += "\nEscreva o texto em Inglês.\n";
+    let prompt = `Você é uma IA do Humilhador de GitHub e sua função é fazer uma análise extremamente breve e zoar o perfil dos usuários.`;
+    if (data.language && data.language != "pt") {
+      const languages = {
+        en: "Inglês",
+        es: "Espanhol",
+      };
+
+      prompt += ` Escreva o texto em ${languages[data.language as "en" | "es"] ?? languages["en"]}.\n`;
     }
 
     prompt += `\nAssuma que a data de hoje é ${new Date().toLocaleString(
