@@ -50,52 +50,58 @@ export async function POST(req: Request) {
       },
       {
         status: 400,
-      }
+      },
     );
   }
 
   const cachedAnalysis = await redis?.get(
-    "analysis:" + data.username.toLowerCase()
+    "analysis:" + data.username.toLowerCase(),
   );
   if (cachedAnalysis) {
     return new NextResponse(cachedAnalysis as string);
   }
 
   try {
-    let prompt = `Assumindo que hoje é ${new Date().toLocaleString()}, seja extremamente breve, sarcástico e ácido sobre perfil no GitHub a seguir`;
+    let prompt = `Você é uma IA do Humilhador de GitHub e sua função é fazer uma análise extremamente breve e zoar o perfil dos usuários.\n`;
     if (data.language == "en") {
-      prompt += " e responda em Inglês:\n";
-    } else {
-      prompt += ":\n";
+      prompt += "\nEscreva o texto em Inglês.\n";
     }
 
-    prompt += `- O @ é "${data.username}"\n`;
-    prompt += `- Sua conta foi criada em ${data.createdAt}\n`;
-    prompt += `- ${data.publicRepos} repositórios\n`;
-    prompt += `- ${data.followers} seguidores\n`;
-    prompt += `- Seguindo ${data.following}\n`;
+    prompt += `\nAssuma que a data de hoje é ${new Date().toLocaleString(
+      "pt-BR",
+    )}`;
 
-    if (data.name) prompt += `- Seu nome é "${data.name}"\n`;
-    if (data.location) prompt += `- Localizado em "${data.location}"\n`;
-    if (data.bio) prompt += `- Bio é "${data.bio}"\n`;
+    let profilePrompt = `Analise o perfil abaixo:\n`;
+    profilePrompt += `- O @ é "${data.username}"\n`;
+    profilePrompt += `- Sua conta foi criada em ${data.createdAt}\n`;
+    profilePrompt += `- ${data.publicRepos} repositórios\n`;
+    profilePrompt += `- ${data.followers} seguidores\n`;
+    profilePrompt += `- Seguindo ${data.following}\n`;
+
+    if (data.name) profilePrompt += `- Seu nome é "${data.name}"\n`;
+    if (data.location) profilePrompt += `- Localizado em "${data.location}"\n`;
+    if (data.bio) profilePrompt += `- Bio é "${data.bio}"\n`;
 
     if (data.repos.length > 0) {
-      prompt += `\nSeus repositórios são:\n`;
+      profilePrompt += `\nSeus repositórios são:\n`;
 
       for (const repo of data.repos.slice(0, 5)) {
-        prompt += `\n- ${repo.name}: ${repo.description ?? "sem descrição"}\n`;
+        profilePrompt += `\n- ${repo.name}: ${
+          repo.description ?? "sem descrição"
+        }\n`;
         if (repo.createdAt == repo.updatedAt) {
-          prompt += `- Criado em ${repo.createdAt};\n`;
+          profilePrompt += `- Criado em ${repo.createdAt};\n`;
         } else {
-          prompt += `- Criado em ${repo.createdAt} e última vez atualizado em ${repo.updatedAt};\n`;
+          profilePrompt += `- Criado em ${repo.createdAt} e última vez atualizado em ${repo.updatedAt};\n`;
         }
-        prompt += `- ${repo.stars} estrelas;\n`;
+        profilePrompt += `- ${repo.stars} estrelas;\n`;
 
-        if (repo.isFork) prompt += "- é um fork;\n";
-        if (repo.isArchived) prompt += "- arquivado;\n";
-        if (repo.language) prompt += `- Feito em ${repo.language};\n`;
-        if (repo.forksCount) prompt += `- ${repo.forksCount} forks;\n`;
-        if (repo.openIssues > 0) prompt += `- ${repo.openIssues} issues;\n`;
+        if (repo.isFork) profilePrompt += "- é um fork;\n";
+        if (repo.isArchived) profilePrompt += "- arquivado;\n";
+        if (repo.language) profilePrompt += `- feito em ${repo.language};\n`;
+        if (repo.forksCount) profilePrompt += `- ${repo.forksCount} forks;\n`;
+        if (repo.openIssues > 0)
+          profilePrompt += `- ${repo.openIssues} issues;\n`;
       }
     }
 
@@ -103,8 +109,12 @@ export async function POST(req: Request) {
       model: process.env.MODEL as string,
       messages: [
         {
-          role: "user",
+          role: "system",
           content: prompt,
+        },
+        {
+          role: "user",
+          content: profilePrompt,
         },
       ],
       max_tokens: 1280,
@@ -143,7 +153,7 @@ export async function POST(req: Request) {
         },
         {
           status: 500,
-        }
+        },
       );
     }
 
@@ -155,7 +165,7 @@ export async function POST(req: Request) {
       },
       {
         status: 500,
-      }
+      },
     );
   }
 }
